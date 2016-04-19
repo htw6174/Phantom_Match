@@ -6,7 +6,24 @@ public class BlockGrid : MonoBehaviour {
     public int width;
     public int height;
 
+    public float boardSize;
+
+    public GameObject[] blockPrefabs;
+
     private Block[,] blocks;
+    private Vector3[,] blockPositions;
+
+    void Start()
+    {
+        FillBlockGrid();
+        FillBlockPositions();
+        SetBlockPositions();
+    }
+
+    void Update()
+    {
+
+    }
 
     /// <summary>
     /// Returns the Block at position
@@ -38,5 +55,48 @@ public class BlockGrid : MonoBehaviour {
             }
 
         }
+    }
+
+    private void FillBlockGrid()
+    {
+        blocks = new Block[width, height];
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                blocks[x, y] = RandomBlockInstance();
+            }
+        }
+    }
+
+    private void FillBlockPositions()
+    {
+        Vector3[,] newPositions = new Vector3[width, height];
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                newPositions[x, y] = new Vector3(Mathf.Lerp(-boardSize / 2f, boardSize / 2f, x / (float)(width - 1)), Mathf.Lerp(-boardSize / 2f, boardSize / 2f, y / (float)(width - 1)), 0f);
+            }
+        }
+        blockPositions = newPositions;
+    }
+
+    private void SetBlockPositions()
+    {
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                blocks[x, y].transform.position = blockPositions[x, y];
+            }
+        }
+    }
+
+    private Block RandomBlockInstance()
+    {
+        GameObject blockPrefab = Instantiate(blockPrefabs[Random.Range(0, blockPrefabs.Length)]);
+        Debug.Log(blockPrefab.name);
+        return blockPrefab.GetComponent<Block>();
     }
 }
