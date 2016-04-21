@@ -1,8 +1,15 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-[RequireComponent(typeof(SpriteRenderer))]
 public class Block : MonoBehaviour {
 
-    BlockTypes type;
+    public GridPosition gridPos;
+
+    public BlockType type;
+
+    public void SetPosition(int newX, int newY)
+    {
+        gridPos.x = newX;
+        gridPos.y = newY;
+    }
 }
