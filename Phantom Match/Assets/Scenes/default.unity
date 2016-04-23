@@ -85,10 +85,6 @@ NavMeshSettings:
     cellSize: 0.16666667
     manualCellSize: 0
   m_NavMeshData: {fileID: 0}
---- !u!4 &106467939 stripped
-Transform:
-  m_PrefabParentObject: {fileID: 422998, guid: ef25f983f22aa5742b6a10f5a1d64794, type: 2}
-  m_PrefabInternal: {fileID: 1382004730}
 --- !u!1 &345597429
 GameObject:
   m_ObjectHideFlags: 0
@@ -245,7 +241,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 6
 --- !u!1 &434107585
 GameObject:
   m_ObjectHideFlags: 0
@@ -333,7 +329,7 @@ RectTransform:
   - {fileID: 345597430}
   - {fileID: 672684506}
   m_Father: {fileID: 0}
-  m_RootOrder: 7
+  m_RootOrder: 8
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
@@ -558,7 +554,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 0
+  m_RootOrder: 1
 --- !u!1001 &934205465
 Prefab:
   m_ObjectHideFlags: 0
@@ -661,7 +657,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 6
+  m_RootOrder: 7
 --- !u!1001 &1382004730
 Prefab:
   m_ObjectHideFlags: 0
@@ -699,7 +695,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 422998, guid: ef25f983f22aa5742b6a10f5a1d64794, type: 2}
       propertyPath: m_RootOrder
-      value: 2
+      value: 3
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: ef25f983f22aa5742b6a10f5a1d64794, type: 2}
@@ -785,10 +781,10 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1718887609}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.42, y: -6.99, z: -10}
+  m_LocalPosition: {x: 0, y: 0, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-  m_Father: {fileID: 106467939}
+  m_Father: {fileID: 0}
   m_RootOrder: 0
 --- !u!1001 &1729009254
 Prefab:
@@ -981,4 +977,4 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 8
+  m_RootOrder: 9
