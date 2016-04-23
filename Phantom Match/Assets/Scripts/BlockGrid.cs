@@ -176,6 +176,18 @@ public class BlockGrid : MonoBehaviour {
         block.transform.position = blockPositions[x, y];
     }
 
+    private bool CheckMatch(int x, int y, Direction direction = Direction.None, BlockType type = BlockType.Red, int chainLength = 1)
+    {
+        //Case for a call from outside the function
+        if(direction == Direction.None)
+        {
+
+        }
+        type = blocks[x, y].type;
+
+        return false;
+    }
+
     private void FillBlockGrid()
     {
         blocks = new Block[width, height];
