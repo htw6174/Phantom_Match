@@ -11,6 +11,8 @@ public class BlockGrid : MonoBehaviour {
     public GameObject blockColliderPrefab;
     public GameObject[] blockPrefabs;
 
+    public Block defaultBlock;
+
     private Vector3[,] blockPositions;
     private Block[,] blocks;
     private Block[,] blockColliders;
@@ -47,35 +49,30 @@ public class BlockGrid : MonoBehaviour {
     }
 
     /// <summary>
-    /// Returns the Block at position
+    /// Returns the Block at position; Returns new block with BlockType of 'none' if out of range
     /// </summary>
     /// <param name="x">Horizontal postion</param>
     /// <param name="y">Vertical position</param>
-    /// <param name="clampRange">
-    /// true: returns closest valid block to x, y
-    /// false: reutrns null when x, y is outside of range
-    /// </param>
     /// <returns></returns>
-    public Block GetBlock(int x, int y, bool clampRange = true)
+    public Block GetBlock(int x, int y)
     {
-        if (clampRange)
+        if (x < 0 || y < 0 || x > width - 1 || y > height - 1)
         {
-            x = Mathf.Clamp(x, 0, width - 1);
-            y = Mathf.Clamp(y, 0, height - 1);
-            return blocks[x, y];
+            return null;
         }
         else
         {
-            if (x < 0 || x < 0 || x > width - 1 || x > height - 1)
-            {
-                return null;
-            }
-            else
-            {
-                return blocks[x, y];
-            }
-
+            //x = Mathf.Clamp(x, 0, width - 1);
+            //y = Mathf.Clamp(y, 0, height - 1);
+            return blocks[x, y];
         }
+    }
+
+    public BlockType GetBlockType(int x, int y)
+    {
+        Block returned = GetBlock(x, y);
+        if (returned == null) return BlockType.None;
+        else return returned.type;
     }
 
     public void SelectBlock(Vector3 position)
@@ -104,6 +101,7 @@ public class BlockGrid : MonoBehaviour {
     {
         selected.transform.localScale = Vector3.one;
         selected = null;
+        CheckMatches();
     }
 
     private Direction FindGridDirection(int x1, int y1, int x2, int y2)
@@ -176,16 +174,94 @@ public class BlockGrid : MonoBehaviour {
         block.transform.position = blockPositions[x, y];
     }
 
-    private bool CheckMatch(int x, int y, Direction direction = Direction.None, BlockType type = BlockType.Red, int chainLength = 1)
+    /// <summary>
+    /// Loop through each block in the grid and run CheckMatch() on it
+    /// </summary>
+    private void CheckMatches()
     {
-        //Case for a call from outside the function
-        if(direction == Direction.None)
+        Block[,] matchedBlocks = new Block[width, height];
+        for (int x = 0; x < width; x++)
         {
-
+            for (int y = 0; y < height; y++)
+            {
+                if (CheckMatch(x, y))
+                {
+                    matchedBlocks[x, y] = GetBlock(x, y);
+                }
+            }
         }
-        type = blocks[x, y].type;
 
-        return false;
+        for (int x = 0; x < width; x++)
+        {
+            int nullCount = 0;
+            for (int y = 0; y < height; y++)
+            {
+                if (matchedBlocks[x, y] != null)
+                {
+                    DeleteBlock(matchedBlocks[x, y]);
+                    nullCount++;
+                }
+                else
+                {
+                    //TODO: Call 
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Check for chains of blocks matching the type of block at [x, y] horizontally and vertically
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    private bool CheckMatch(int x, int y)
+    {
+        BlockType type = GetBlockType(x, y);
+        int verticalLength = 1;
+        int horizontalLength = 1;
+
+        verticalLength += CheckMatchInDirection(x, y, Direction.Up, type);
+        verticalLength += CheckMatchInDirection(x, y, Direction.Down, type);
+        horizontalLength += CheckMatchInDirection(x, y, Direction.Right, type);
+        horizontalLength += CheckMatchInDirection(x, y, Direction.Left, type);
+
+        if (verticalLength >= 3 || horizontalLength >= 3)
+        {
+            GetBlock(x, y).transform.localScale = Vector3.one * 0.5f;
+            Debug.Log(type + " was part of a " + verticalLength + "x" + horizontalLength + " match!");
+            return true;
+        }
+        else return false;
+    }
+
+    /// <summary>
+    /// Checks if block in [direction] is equal in type to the block at [x, y]
+    /// Add one to the return value and repeat if true
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <param name="direction"></param>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    private int CheckMatchInDirection(int x, int y, Direction direction, BlockType type)
+    {
+        BlockType toCheck = GetBlockType(x + direction.ToXInt(), y + direction.ToYInt());
+        if (toCheck == type)
+        {
+            //TODO: Flag block for destruction after match checking is done
+            return CheckMatchInDirection(x + direction.ToXInt(), y + direction.ToYInt(), direction, type) + 1;
+        }
+        else return 0;
+    }
+
+    private void MoveDown(int x, int y, int fall)
+    {
+
+    }
+
+    private void DeleteBlock(Block toDelete)
+    {
+        Destroy(toDelete);
     }
 
     private void FillBlockGrid()
