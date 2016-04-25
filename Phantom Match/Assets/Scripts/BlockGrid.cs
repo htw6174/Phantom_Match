@@ -16,7 +16,7 @@ public class BlockGrid : MonoBehaviour {
     public Block defaultBlock;
 
     private Vector3[,] blockPositions;
-    private Block[,] blocks;
+    private Block[,] blocks; //This file could be cleaned up a lot by making a class to hold this array and put all my accessor/mutator/checker functions there
     private Block[,] blockColliders;
 
     private Block selected;
@@ -47,7 +47,10 @@ public class BlockGrid : MonoBehaviour {
 
     void Update()
     {
-
+        if (selected == null && CheckForStaticBoard())
+        {
+            CheckMatches();
+        }
     }
 
     /// <summary>
@@ -197,11 +200,30 @@ public class BlockGrid : MonoBehaviour {
         SetBlock(x, y, block);
     }
 
+    private bool CheckForStaticBoard()
+    {
+        bool isStatic = true;
+        
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                if(GetBlock(x, y).inMotion)
+                {
+                    isStatic = false;
+                }
+            }
+        }
+
+        return isStatic;
+    }
+
     /// <summary>
     /// Loop through each block in the grid and run CheckMatch() on it
     /// </summary>
     private void CheckMatches()
     {
+        //Partially fill matchedBlocks list using blocks that are part of a valid match
         Block[,] matchedBlocks = new Block[width, height];
         for (int x = 0; x < width; x++)
         {
@@ -221,17 +243,18 @@ public class BlockGrid : MonoBehaviour {
             {
                 if (matchedBlocks[x, y] != null)
                 {
+                    //Destroy block and incerease null block counter
                     matchedBlocks[x, y].DestroyBlock();
                     nullCount++;
                 }
                 else
                 {
-                    //Cause block in position to fall
+                    //Cause block in position to fall to lowest available space
                     MoveBlockTo(GetBlock(x, y), x, y - nullCount);
-                    //Spawn new block at y of height + nullCount
                 }
             }
 
+            //Spawn new column of blocks above game board, one for each null block found
             int heightAbove = nullCount;
             for (int y = 0; y < nullCount; y++)
             {
