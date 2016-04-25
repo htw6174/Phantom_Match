@@ -8,6 +8,8 @@ public class BlockGrid : MonoBehaviour {
 
     public float blockSize;
 
+    public float blockSpeed = 2f;
+
     public GameObject blockColliderPrefab;
     public GameObject[] blockPrefabs;
 
@@ -65,6 +67,27 @@ public class BlockGrid : MonoBehaviour {
             //x = Mathf.Clamp(x, 0, width - 1);
             //y = Mathf.Clamp(y, 0, height - 1);
             return blocks[x, y];
+        }
+    }
+
+    /// <summary>
+    /// Sets block at [x, y] to newBlock and returns true on success
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <param name="newBlock"></param>
+    /// <returns></returns>
+    public bool SetBlock(int x, int y, Block newBlock)
+    {
+        if (x < 0 || y < 0 || x > width - 1 || y > height - 1)
+        {
+            Debug.Log("Tried to assign block to space outside the grid!", newBlock.gameObject);
+            return false;
+        }
+        else
+        {
+            blocks[x, y] = newBlock;
+            return true;
         }
     }
 
@@ -155,15 +178,14 @@ public class BlockGrid : MonoBehaviour {
 
     private void SwapGridBlock(int x1, int y1, int x2, int y2)
     {
-        Block temp = blocks[x1, y1];
-        blocks[x1, y1] = blocks[x2, y2];
-        blocks[x2, y2] = temp;
-        MoveBlockTo(blocks[x1, y1], x1, y1);
-        MoveBlockTo(blocks[x2, y2], x2, y2);
+        Block temp = GetBlock(x1, y1);
+        MoveBlockTo(GetBlock(x2, y2), x1, y1);
+        MoveBlockTo(temp, x2, y2);
     }
 
     /// <summary>
-    /// Smoothly Interpolates block position from current to grid position given by [x, y]
+    /// Reassigns blocks[x, y] to given block, and
+    /// smoothly interpolates block position from current to grid position given by [x, y]
     /// </summary>
     /// <param name="block"></param>
     /// <param name="x"></param>
@@ -171,7 +193,8 @@ public class BlockGrid : MonoBehaviour {
     private void MoveBlockTo(Block block, int x, int y)
     {
         block.SetPosition(x, y);
-        block.transform.position = blockPositions[x, y];
+        StartCoroutine(block.MoveBlock(blockPositions[x, y], blockSpeed));
+        SetBlock(x, y, block);
     }
 
     /// <summary>
@@ -198,13 +221,22 @@ public class BlockGrid : MonoBehaviour {
             {
                 if (matchedBlocks[x, y] != null)
                 {
-                    DeleteBlock(matchedBlocks[x, y]);
+                    matchedBlocks[x, y].DestroyBlock();
                     nullCount++;
                 }
                 else
                 {
-                    //TODO: Call 
+                    //Cause block in position to fall
+                    MoveBlockTo(GetBlock(x, y), x, y - nullCount);
+                    //Spawn new block at y of height + nullCount
                 }
+            }
+
+            int heightAbove = nullCount;
+            for (int y = 0; y < nullCount; y++)
+            {
+                SpawnBlock(x, height - y - 1, heightAbove);
+                heightAbove--;
             }
         }
     }
@@ -246,7 +278,7 @@ public class BlockGrid : MonoBehaviour {
     private int CheckMatchInDirection(int x, int y, Direction direction, BlockType type)
     {
         BlockType toCheck = GetBlockType(x + direction.ToXInt(), y + direction.ToYInt());
-        if (toCheck == type)
+        if (type != BlockType.None && toCheck == type)
         {
             //TODO: Flag block for destruction after match checking is done
             return CheckMatchInDirection(x + direction.ToXInt(), y + direction.ToYInt(), direction, type) + 1;
@@ -254,14 +286,11 @@ public class BlockGrid : MonoBehaviour {
         else return 0;
     }
 
-    private void MoveDown(int x, int y, int fall)
+    private void SpawnBlock(int x, int y, int rise)
     {
-
-    }
-
-    private void DeleteBlock(Block toDelete)
-    {
-        Destroy(toDelete);
+        Block newBlock = RandomBlockInstance();
+        newBlock.transform.position = blockPositions[x, height + rise - 1];
+        MoveBlockTo(newBlock, x, y);
     }
 
     private void FillBlockGrid()
@@ -271,8 +300,8 @@ public class BlockGrid : MonoBehaviour {
         {
             for (int y = 0; y < height; y++)
             {
-                blocks[x, y] = RandomBlockInstance();
-                blocks[x, y].SetPosition(x, y);
+                SetBlock(x, y, RandomBlockInstance());
+                GetBlock(x, y).SetPosition(x, y);
             }
         }
     }
@@ -293,12 +322,15 @@ public class BlockGrid : MonoBehaviour {
 
     private void FillBlockPositions()
     {
-        Vector3[,] newPositions = new Vector3[width, height];
+        int heightTimes2 = height * 2;
+        Vector3[,] newPositions = new Vector3[width, heightTimes2];
         for (int x = 0; x < width; x++)
         {
-            for (int y = 0; y < height; y++)
+            for (int y = 0; y < height * 2; y++)
             {
-                newPositions[x, y] = new Vector3(Mathf.Lerp(-BoardWidth / 2f, BoardWidth / 2f, x / (float)(width - 1)), Mathf.Lerp(-BoardHeight / 2f, BoardHeight / 2f, y / (float)(height - 1)), 0f);
+                float newX = Mathf.Lerp(-BoardWidth / 2f, BoardWidth / 2f, x / (float)(width - 1));
+                float newY = Mathf.Lerp(-BoardHeight / 2f, (BoardHeight / 2f) + BoardHeight, y / (float)(heightTimes2 - 2));
+                newPositions[x, y] = new Vector3(newX, newY, 0f);
             }
         }
         blockPositions = newPositions;
@@ -310,7 +342,7 @@ public class BlockGrid : MonoBehaviour {
         {
             for (int y = 0; y < height; y++)
             {
-                blocks[x, y].transform.position = blockPositions[x, y];
+                GetBlock(x, y).transform.position = blockPositions[x, y];
                 blockColliders[x, y].transform.position = blockPositions[x, y];
             }
         }
