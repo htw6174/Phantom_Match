@@ -7,6 +7,7 @@ public class Block : MonoBehaviour {
 
     public BlockType type;
 
+    //this is being set to the opposite of what it should be for some reason, need to fix dat shit
     public bool inMotion = false;
 
     public void SetPosition(int newX, int newY)
@@ -19,11 +20,17 @@ public class Block : MonoBehaviour {
     /// Tell a block to move from its current position to newPosition, at a rate of [speed] units per second
     /// </summary>
     /// <param name="newPosition"></param>
-    /// <param name="speed"></param>
-    public IEnumerator MoveBlock(Vector3 newPosition, float speed = 1f)
+    /// <param name="speed">Numver of units the block moves in one second</param>
+    /// <param name="delay">Number of seconds to wait until motion starts</param>
+    public IEnumerator MoveBlock(Vector3 newPosition, float speed = 1f, float delay = 0f)
     {
         WaitForSeconds frameDelay = new WaitForSeconds(1f / 60f);
+        WaitForSeconds fallDelay = new WaitForSeconds(delay);
+
         inMotion = true;
+
+        yield return fallDelay;
+
         Vector3 startPosition = transform.position;
         float distance = Vector3.Distance(startPosition, newPosition);
         int steps = (int)(distance * (60f / speed));
@@ -33,12 +40,24 @@ public class Block : MonoBehaviour {
             yield return frameDelay;
         }
         transform.position = newPosition;
+
         inMotion = false;
     }
 
-    public void DestroyBlock()
+    public void DestroyBlock(float speed = 1f)
     {
-        StopAllCoroutines();
-        Destroy(gameObject, 0.2f); //Added a delay here because the coroutine would sometimes finish its loop with instant destruction
+        StartCoroutine(ShrinkBlock(speed));
+        Destroy(gameObject, 1f / speed);
+    }
+
+    private IEnumerator ShrinkBlock(float speed)
+    {
+        WaitForSeconds frameDelay = new WaitForSeconds(1f / 60f);
+        int steps = (int)(60f / speed);
+        for (int i = 0; i < steps; i++)
+        {
+            transform.localScale = Vector3.one * (0.5f - ((float)i / steps));
+            yield return frameDelay;
+        }
     }
 }

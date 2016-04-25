@@ -250,8 +250,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   width: 6
   height: 8
-  blockSize: 1
-  blockSpeed: 8
+  blockSize: 1.05
+  blockSpeed: 12
+  blockVanishSpeed: 3
   blockColliderPrefab: {fileID: 139432, guid: e0ea99b57e2d4ab43820fa6bb2b119ed, type: 2}
   blockPrefabs:
   - {fileID: 132778, guid: d92e87f6c41591d40b649dd98961483d, type: 2}

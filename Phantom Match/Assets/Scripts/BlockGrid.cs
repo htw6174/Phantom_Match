@@ -8,7 +8,8 @@ public class BlockGrid : MonoBehaviour {
 
     public float blockSize;
 
-    public float blockSpeed = 2f;
+    public float blockSpeed = 12f;
+    public float blockVanishSpeed = 4f;
 
     public GameObject blockColliderPrefab;
     public GameObject[] blockPrefabs;
@@ -103,20 +104,23 @@ public class BlockGrid : MonoBehaviour {
 
     public void SelectBlock(Vector3 position)
     {
-        Ray cameraToGrid = new Ray(position, Vector3.forward * 10);
-        Debug.DrawRay(position, Vector3.forward * 9.7f);
-        RaycastHit pointerHit;
-        if (Physics.Raycast(cameraToGrid, out pointerHit))
+        if (CheckForStaticBoard())
         {
-            GridPosition colPos = pointerHit.transform.gameObject.GetComponent<Block>().gridPos;
-            if (selected == null)
+            GridPosition colPos = BlockUnderPointer(position);
+            if (colPos != null)
             {
-                //Debug.Log(colPos.x + ", " + colPos.y);
                 selected = blocks[colPos.x, colPos.y];
                 selected.transform.localScale = Vector3.one * 0.8f;
-                //Debug.Log(selected.gridPos.x + ", " + selected.gridPos.y);
             }
-            else if (selected)
+        }
+    }
+
+    public void DragBlock(Vector3 position)
+    {
+        if (selected)
+        {
+            GridPosition colPos = BlockUnderPointer(position);
+            if (colPos != null)
             {
                 SwapBlock(selected.gridPos.x, selected.gridPos.y, FindGridDirection(selected.gridPos.x, selected.gridPos.y, colPos.x, colPos.y));
             }
@@ -125,9 +129,28 @@ public class BlockGrid : MonoBehaviour {
 
     public void DeselectBlock()
     {
-        selected.transform.localScale = Vector3.one;
-        selected = null;
-        CheckMatches();
+        if (selected)
+        {
+            selected.transform.localScale = Vector3.one;
+            selected = null;
+        }
+    }
+
+    /// <summary>
+    /// Returns the grid [x, y] coresponding to a given worldspace position
+    /// </summary>
+    /// <param name="position"></param>
+    /// <returns></returns>
+    private GridPosition BlockUnderPointer(Vector3 position)
+    {
+        Ray cameraToGrid = new Ray(position, Vector3.forward * 10);
+        Debug.DrawRay(position, Vector3.forward * 9.7f);
+        RaycastHit pointerHit;
+        if (Physics.Raycast(cameraToGrid, out pointerHit))
+        {
+            return pointerHit.transform.gameObject.GetComponent<Block>().gridPos;
+        }
+        else return null;
     }
 
     private Direction FindGridDirection(int x1, int y1, int x2, int y2)
@@ -184,6 +207,7 @@ public class BlockGrid : MonoBehaviour {
         Block temp = GetBlock(x1, y1);
         MoveBlockTo(GetBlock(x2, y2), x1, y1);
         MoveBlockTo(temp, x2, y2);
+        DeselectBlock();
     }
 
     /// <summary>
@@ -193,10 +217,11 @@ public class BlockGrid : MonoBehaviour {
     /// <param name="block"></param>
     /// <param name="x"></param>
     /// <param name="y"></param>
-    private void MoveBlockTo(Block block, int x, int y)
+    /// <param name="delayMotion">Should the block motion be delayed by the block vanish time?</param>
+    private void MoveBlockTo(Block block, int x, int y, bool delayMotion = false)
     {
         block.SetPosition(x, y);
-        StartCoroutine(block.MoveBlock(blockPositions[x, y], blockSpeed));
+        StartCoroutine(block.MoveBlock(blockPositions[x, y], blockSpeed, delayMotion ? 1f / blockVanishSpeed : 0f));
         SetBlock(x, y, block);
     }
 
@@ -244,13 +269,13 @@ public class BlockGrid : MonoBehaviour {
                 if (matchedBlocks[x, y] != null)
                 {
                     //Destroy block and incerease null block counter
-                    matchedBlocks[x, y].DestroyBlock();
+                    matchedBlocks[x, y].DestroyBlock(blockVanishSpeed);
                     nullCount++;
                 }
                 else
                 {
                     //Cause block in position to fall to lowest available space
-                    MoveBlockTo(GetBlock(x, y), x, y - nullCount);
+                    MoveBlockTo(GetBlock(x, y), x, y - nullCount, true);
                 }
             }
 
@@ -282,7 +307,6 @@ public class BlockGrid : MonoBehaviour {
 
         if (verticalLength >= 3 || horizontalLength >= 3)
         {
-            GetBlock(x, y).transform.localScale = Vector3.one * 0.5f;
             Debug.Log(type + " was part of a " + verticalLength + "x" + horizontalLength + " match!");
             return true;
         }
@@ -313,7 +337,7 @@ public class BlockGrid : MonoBehaviour {
     {
         Block newBlock = RandomBlockInstance();
         newBlock.transform.position = blockPositions[x, height + rise - 1];
-        MoveBlockTo(newBlock, x, y);
+        MoveBlockTo(newBlock, x, y, true);
     }
 
     private void FillBlockGrid()

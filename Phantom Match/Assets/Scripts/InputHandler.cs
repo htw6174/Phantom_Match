@@ -19,12 +19,15 @@ public class InputHandler : MonoBehaviour {
 
     private void CheckClicks()
     {
-        if (Input.GetButton("Fire1"))
+        if (Input.GetButtonDown("Fire1"))
         {
             gridController.SelectBlock(GetMouseWorldPosition());
         }
-
-        if (Input.GetButtonUp("Fire1"))
+        else if (Input.GetButton("Fire1"))
+        {
+            gridController.DragBlock(GetMouseWorldPosition());
+        }
+        else if (Input.GetButtonUp("Fire1"))
         {
             gridController.DeselectBlock();
         }
